@@ -14,6 +14,7 @@ import datetime
 
 # django
 from django.db.models import Model, CharField, DateField, ForeignKey, Manager
+from django.test import TestCase
 
 # this app
 from autoslug.settings import slugify as default_slugify
@@ -269,8 +270,7 @@ class ModelWithReferenceToItself(Model):
     >>> a.save()
     Traceback (most recent call last):
     ...
-    ValueError: Attribute ModelWithReferenceToItself.slug references itself \
-    in `unique_with`. Please use "unique=True" for this case.
+    ValueError: Attribute ModelWithReferenceToItself.slug references itself in `unique_with`. Please use "unique=True" for this case.
     """
     slug = AutoSlugField(unique_with='slug')
 
@@ -281,8 +281,7 @@ class ModelWithWrongReferencedField(Model):
     >>> a.save()
     Traceback (most recent call last):
     ...
-    ValueError: Could not find attribute ModelWithWrongReferencedField.wrong_field \
-    referenced by ModelWithWrongReferencedField.slug (see constraint `unique_with`)
+    ValueError: Could not find attribute ModelWithWrongReferencedField.wrong_field referenced by ModelWithWrongReferencedField.slug (see constraint `unique_with`)
     """
     slug = AutoSlugField(unique_with='wrong_field')
 
@@ -293,8 +292,7 @@ class ModelWithWrongLookupInUniqueWith(Model):
     >>> a.save()
     Traceback (most recent call last):
     ...
-    ValueError: Could not resolve lookup "name__foo" in `unique_with` of \
-    ModelWithWrongLookupInUniqueWith.slug
+    ValueError: Could not resolve lookup "name__foo" in `unique_with` of ModelWithWrongLookupInUniqueWith.slug
     """
     slug = AutoSlugField(unique_with='name__foo')
     name = CharField(max_length=10)
@@ -306,9 +304,7 @@ class ModelWithWrongFieldOrder(Model):
     >>> a.save()
     Traceback (most recent call last):
     ...
-    ValueError: Could not check uniqueness of ModelWithWrongFieldOrder.slug with \
-    respect to ModelWithWrongFieldOrder.date because the latter is empty. Please \
-    ensure that "slug" is declared *after* all fields listed in unique_with.
+    ValueError: Could not check uniqueness of ModelWithWrongFieldOrder.slug with respect to ModelWithWrongFieldOrder.date because the latter is empty. Please ensure that "slug" is declared *after* all fields listed in unique_with.
     """
     slug = AutoSlugField(unique_with='date')
     date = DateField(blank=False, null=False)
@@ -371,3 +367,12 @@ class ModelWithSlugSpaceShared(SharedSlugSpace):
     >>> b.slug
     u'my-name-2'
     """
+
+
+def load_tests(loader, tests, ignore):
+    # Since Django 1.6 the normal way to plug doctests in is deprecated
+    # (see https://docs.djangoproject.com/en/1.6/releases/1.6/#new-test-runner)
+    import sys
+    mod = sys.modules[__name__]
+    tests.addTests(doctest.DocTestSuite(mod))
+    return tests
